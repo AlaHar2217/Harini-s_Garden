@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A Little Garden, Grown For You</title>
+<!--
+   shh... if you're reading this, you're the kind of person who checks
+   under the hood. that's a good quality. this whole little garden
+   was made with you in mind. try typing the word "love" anywhere on
+   the page, clicking on the roses, or just leaving the tab for a bit. -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500;1,9..144,600&family=Inter:wght@400;500;600&family=Dancing+Script:wght@600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#fff8f3;
+    --blush:#ffeef1;
+    --blush-2:#ffe1e7;
+    --panel:#fffaf7;
+    --line:#f3d3d9;
+    --rose:#e0526f;
+    --rose-deep:#b8395a;
+    --rose-soft:#ff9fb2;
+    --gold:#d9a441;
+    --plum:#5c2a3a;
+    --muted:#9c7581;
+    --font-display:'Fraunces','Georgia',serif;
+    --font-body:'Inter',system-ui,sans-serif;
+    --font-script:'Dancing Script',cursive;
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 12% -8%, rgba(255,159,178,0.18), transparent 60%),
+      radial-gradient(ellipse 800px 600px at 92% 6%, rgba(217,164,65,0.10), transparent 55%),
+      var(--cream);
+    color:var(--plum);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* ---------- ambient floating hearts ---------- */
+  .heart-field{
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    overflow:hidden;
+  }
+  .heart-field svg{
+    position:absolute;
+    opacity:0.35;
+    animation:drift 20s ease-in-out infinite;
+  }
+  .h1{ top:10%; left:5%; width:34px; animation-duration:24s; }
+  .h2{ top:65%; left:2%; width:24px; animation-duration:18s; animation-delay:-3s; }
+  .h3{ top:16%; right:6%; width:28px; animation-duration:22s; animation-delay:-8s; }
+  .h4{ bottom:12%; right:4%; width:22px; animation-duration:19s; animation-delay:-1s; }
+  .h5{ top:42%; right:16%; width:16px; animation-duration:16s; animation-delay:-6s; opacity:0.25; }
+  @keyframes drift{
+    0%,100%{ transform:translate(0,0) rotate(-6deg); }
+    50%{ transform:translate(8px,-22px) rotate(6deg); }
+  }
+
+  .wrap{
+    position:relative;
+    z-index:1;
+    max-width:1180px;
+    margin:0 auto;
+    padding:0 24px 80px;
+  }
+
+  header.hero{
+    padding:60px 0 34px;
+    text-align:center;
+    opacity:0;
+    animation:fadeUp 0.9s ease forwards;
+  }
+  .eyebrow{
+    font-family:var(--font-script);
+    font-size:1.35rem;
+    color:var(--rose-deep);
+    margin-bottom:6px;
+    display:inline-block;
+  }
+  h1.title{
+    font-family:var(--font-display);
+    font-weight:500;
+    font-size:clamp(2.3rem, 5.4vw, 4rem);
+    line-height:1.08;
+    margin:0 0 18px;
+    letter-spacing:-0.01em;
+    color:var(--plum);
+  }
+  h1.title em{
+    font-style:italic;
+    font-weight:500;
+    color:var(--rose);
+  }
+  .subtitle{
+    max-width:520px;
+    margin:0 auto;
+    color:var(--muted);
+    font-size:1.02rem;
+    line-height:1.65;
+  }
+  .divider{ width:110px; height:24px; margin:30px auto 0; }
+
+  /* ---------- stage ---------- */
+  .plate-wrap{
+    position:relative;
+    margin:40px 0 8px;
+    opacity:0;
+    animation:fadeUp 0.9s ease 0.15s forwards;
+  }
+  .plate-label{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    font-family:var(--font-body);
+    font-size:0.8rem;
+    color:var(--muted);
+    margin-bottom:10px;
+    padding:0 6px;
+  }
+  .plate-label span.tag{
+    font-family:var(--font-script);
+    font-size:1.1rem;
+    color:var(--rose-deep);
+  }
+
+  .plate{
+    position:relative;
+    border-radius:22px;
+    background:#1a0d12;
+    border:1px solid var(--line);
+    box-shadow:
+      0 30px 60px -22px rgba(184,57,90,0.30),
+      0 0 0 6px var(--panel),
+      0 0 0 7px var(--line);
+    overflow:hidden;
+  }
+  .plate canvas{ display:block; width:100%; height:auto; }
+
+  .vignette{
+    position:absolute; inset:0;
+    pointer-events:none; z-index:2;
+    box-shadow: inset 0 0 120px rgba(30,10,16,0.5);
+  }
+
+  .overlay-msg{
+    position:absolute; inset:0; z-index:4;
+    display:flex; align-items:center; justify-content:center;
+    flex-direction:column; gap:16px;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(255,159,178,0.12), transparent 60%),
+      rgba(26,13,18,0.95);
+    text-align:center; padding:30px;
+  }
+  .overlay-msg.hidden{ display:none; }
+  .overlay-msg p{
+    max-width:380px; color:#e9c9d2; font-size:0.95rem; line-height:1.6; margin:0;
+  }
+  .btn-start{
+    background:linear-gradient(180deg, var(--rose), var(--rose-deep));
+    color:#fff6f0; border:none; padding:14px 32px;
+    font-family:var(--font-body); font-weight:600; font-size:0.95rem;
+    border-radius:999px; cursor:pointer;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow:0 10px 30px -8px rgba(224,82,111,0.55);
+  }
+  .btn-start:hover{ transform:translateY(-2px); box-shadow:0 14px 34px -8px rgba(224,82,111,0.7); }
+  .btn-start:active{ transform:translateY(0) scale(0.98); }
+
+  /* full-bloom reveal */
+  .bloom-note{
+    position:absolute;
+    left:50%;
+    bottom:18px;
+    transform:translate(-50%, 14px);
+    z-index:5;
+    background:rgba(255,250,247,0.96);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:12px 22px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:0 14px 30px -10px rgba(184,57,90,0.35);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.5s ease, transform 0.5s ease;
+  }
+  .bloom-note.show{ opacity:1; transform:translate(-50%, 0); }
+  .bloom-note span{
+    font-family:var(--font-script);
+    font-size:1.15rem;
+    color:var(--rose-deep);
+  }
+
+  /* ---------- HUD ---------- */
+  .hud{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr 1.4fr 0.7fr;
+    gap:14px;
+    margin-top:26px;
+    opacity:0;
+    animation:fadeUp 0.9s ease 0.3s forwards;
+  }
+  @media (max-width: 860px){ .hud{ grid-template-columns: 1fr 1fr; } }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:'';
+    position:absolute; top:0; left:0; right:0; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(217,164,65,0.5), transparent);
+  }
+  .card .label{
+    font-size:0.7rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted);
+  }
+  .card .value{
+    font-family:var(--font-display); font-size:1.3rem; margin-top:6px; color:var(--plum);
+  }
+
+  .status-dot{
+    display:inline-block; width:7px; height:7px; border-radius:50%;
+    margin-right:7px; background:var(--muted);
+    transition:background 0.2s ease, box-shadow 0.2s ease;
+  }
+  .status-dot.grow{ background:var(--rose); box-shadow:0 0 10px 2px rgba(224,82,111,0.5); animation:pulse 1.1s ease-in-out infinite; }
+  .status-dot.shrink{ background:#c98a63; box-shadow:0 0 10px 2px rgba(201,138,99,0.4); animation:pulse 1.1s ease-in-out infinite; }
+  @keyframes pulse{ 0%,100%{ opacity:1; transform:scale(1); } 50%{ opacity:0.55; transform:scale(0.8); } }
+
+  .ring-card{ display:flex; align-items:center; gap:16px; }
+  .ring-wrap{ position:relative; width:64px; height:64px; flex:0 0 auto; }
+  .ring-wrap svg{ transform:rotate(-90deg); }
+  .ring-track{ fill:none; stroke:var(--line); stroke-width:6; }
+  .ring-fill{ fill:none; stroke:url(#ringGrad); stroke-width:6; stroke-linecap:round; transition:stroke-dashoffset 0.15s linear; }
+  .ring-pct{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-body); font-weight:600; font-size:0.75rem; color:var(--rose-deep);
+  }
+
+  footer{
+    margin-top:52px; text-align:center; color:var(--muted);
+    font-size:0.85rem; line-height:1.7;
+    opacity:0; animation:fadeUp 0.9s ease 0.45s forwards;
+  }
+  footer strong{ color:var(--plum); font-weight:500; }
+  footer .foot-divider{ width:1px; height:16px; background:var(--line); display:inline-block; margin:0 14px; vertical-align:middle; }
+  footer .sign{ font-family:var(--font-script); color:var(--rose-deep); font-size:1.2rem; display:block; margin-top:14px; }
+
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(14px); } to{ opacity:1; transform:translateY(0); } }
+
+  /* burst hearts on full bloom */
+  .burst-heart{
+    position:fixed;
+    z-index:50;
+    pointer-events:none;
+    animation:burstUp 1.6s ease-out forwards;
+  }
+  @keyframes burstUp{
+    0%{ opacity:0.95; transform:translate(0,0) scale(0.6) rotate(0deg); }
+    100%{ opacity:0; transform:var(--end-transform); }
+  }
+
+  /* ---------- easter eggs ---------- */
+  .eyebrow-wrap{ cursor:default; user-select:none; }
+  .eyebrow-secret{
+    display:block;
+    font-family:var(--font-script);
+    font-size:1rem;
+    color:var(--rose);
+    max-height:0;
+    opacity:0;
+    overflow:hidden;
+    transition:max-height 0.5s ease, opacity 0.5s ease;
+  }
+  .eyebrow-secret.show{ max-height:40px; opacity:1; margin-top:2px; }
+
+  .toast{
+    position:fixed;
+    top:22px;
+    left:50%;
+    transform:translate(-50%, -20px);
+    z-index:80;
+    background:rgba(26,13,18,0.92);
+    color:#ffe9ee;
+    padding:10px 20px;
+    border-radius:999px;
+    font-size:0.88rem;
+    letter-spacing:0.01em;
+    box-shadow:0 12px 30px -10px rgba(0,0,0,0.4);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity 0.4s ease, transform 0.4s ease;
+  }
+  .toast.show{ opacity:1; transform:translate(-50%, 0); }
+
+  .mini-heart{
+    position:fixed;
+    z-index:50;
+    pointer-events:none;
+    animation:miniFloat 1.1s ease-out forwards;
+  }
+  @keyframes miniFloat{
+    0%{ opacity:0.95; transform:translate(0,0) scale(0.5); }
+    100%{ opacity:0; transform:translate(0,-60px) scale(1.1); }
+  }
+
+  .secret-note{
+    max-width:420px;
+    margin:26px auto 0;
+    text-align:center;
+    font-family:var(--font-script);
+    font-size:1.3rem;
+    color:var(--rose-deep);
+    max-height:0;
+    opacity:0;
+    overflow:hidden;
+    transition:max-height 0.7s ease, opacity 0.7s ease;
+  }
+  .secret-note.show{ max-height:120px; opacity:1; margin-top:26px; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; }
+    .heart-field svg{ animation:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="heart-field" aria-hidden="true">
+  <svg class="h1" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="#e0526f"/></svg>
+  <svg class="h2" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="#ff9fb2"/></svg>
+  <svg class="h3" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="#d9a441"/></svg>
+  <svg class="h4" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="#e0526f"/></svg>
+  <svg class="h5" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="#ff9fb2"/></svg>
+</div>
+
+<div class="wrap">
+
+  <header class="hero">
+    <span class="eyebrow-wrap" id="eyebrowWrap" title="psst, try double-clicking">
+      <span class="eyebrow">for you</span>
+      <span class="eyebrow-secret" id="eyebrowSecret">...and only you, actually</span>
+    </span>
+    <h1 class="title">A little garden,<br>grown <em>with a little love</em></h1>
+    <p class="subtitle">Open your hand, and watch it bloom. Close it, and it rests a while. Every rose here grows a little for every bit of love that goes into it.</p>
+    <svg class="divider" viewBox="0 0 110 24" fill="none">
+      <path d="M0 12H42" stroke="#f3d3d9" stroke-width="1"/>
+      <path d="M68 12H110" stroke="#f3d3d9" stroke-width="1"/>
+      <path d="M55 22C55 22 46 15.5 46 9.8C46 6.6 48.3 4.7 50.8 4.7C52.7 4.7 54.2 5.8 55 7.4C55.8 5.8 57.3 4.7 59.2 4.7C61.7 4.7 64 6.6 64 9.8C64 15.5 55 22 55 22Z" fill="#e0526f"/>
+    </svg>
+  </header>
+
+  <div class="plate-wrap">
+    <div class="plate-label">
+      <span><span class="tag">made with love</span> — your very own garden</span>
+      <span id="resLabel">1280 × 720</span>
+    </div>
+    <div class="plate" id="stage">
+      <canvas id="canvas" width="1280" height="720"></canvas>
+      <div class="vignette"></div>
+      <div class="bloom-note" id="bloomNote">
+        <span>&#10084;</span>
+        <span>Fully bloomed — just like how much you're loved.</span>
+      </div>
+      <div class="overlay-msg" id="startOverlay">
+        <svg width="52" height="46" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="#e0526f"/></svg>
+        <p id="overlayText">This needs your camera to see your hand. Nothing is recorded or sent anywhere — it all happens right here, just between you and the garden.</p>
+        <button class="btn-start" id="startBtn">Open the garden</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="card">
+      <div class="label">Gesture</div>
+      <div class="value" id="gestureLabel" style="font-size:1.1rem;">Idle</div>
+    </div>
+    <div class="card">
+      <div class="label">Garden status</div>
+      <div class="value" style="font-size:1.1rem;"><span class="status-dot" id="statusDot"></span><span id="statusLabel">Idle</span></div>
+    </div>
+    <div class="card ring-card">
+      <div class="ring-wrap">
+        <svg width="64" height="64" viewBox="0 0 64 64">
+          <defs>
+            <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#e0526f"/>
+              <stop offset="100%" stop-color="#d9a441"/>
+            </linearGradient>
+          </defs>
+          <circle class="ring-track" cx="32" cy="32" r="26"/>
+          <circle class="ring-fill" id="ringFill" cx="32" cy="32" r="26" stroke-dasharray="163.36" stroke-dashoffset="163.36"/>
+        </svg>
+        <div class="ring-pct" id="ringPct">0%</div>
+      </div>
+      <div>
+        <div class="label">Average bloom</div>
+        <div class="value" style="font-size:1rem; color:var(--muted); font-family:var(--font-body);">across 7 roses</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="label">Frame rate</div>
+      <div class="value" id="fpsLabel" style="font-size:1.05rem;">—</div>
+    </div>
+  </div>
+
+  <footer>
+    <strong>Open hand</strong> to grow the garden<span class="foot-divider"></span><strong>closed fist</strong> to let it rest<br>
+    Runs entirely on your device — this little garden stays just between us.
+    <span class="sign">made just for you</span>
+  </footer>
+
+  <div class="secret-note" id="secretNote">You found every hidden rose. That's exactly how I look for you — everywhere, all the time. &#10084;</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+/* =========================================================================
+   RosePlant
+   ========================================================================= */
+class RosePlant {
+  constructor(baseX, baseY) {
+    this.baseX = baseX;
+    this.baseY = baseY;
+    this.growthLevel = 0.0;
+    this.phase = Math.random() * Math.PI * 2;
+  }
+
+  static maxHeights = [0, 45, 90, 135, 180, 220, 250, 275];
+
+  draw(ctx) {
+    const stage = Math.floor(this.growthLevel);
+    const progress = this.growthLevel - stage;
+    this.phase += 0.06;
+
+    ctx.fillStyle = '#5a3d3a';
+    ctx.beginPath();
+    ctx.ellipse(this.baseX, this.baseY, 78, 18, 0, 0, Math.PI, false);
+    ctx.fill();
+
+    if (stage >= 1) this._drawStem(ctx, stage, progress);
+    if (stage >= 2) this._drawLeaves(ctx, stage, progress);
+    if (stage >= 5) this._drawBud(ctx, stage, progress);
+    if (stage >= 6) this._drawBloom(ctx, stage, progress);
+  }
+
+  _stemHeight(stage, progress) {
+    const mh = RosePlant.maxHeights;
+    let h = mh[Math.min(stage, 7)];
+    if (stage < 7) h += progress * (mh[Math.min(stage + 1, 7)] - mh[stage]);
+    return h;
+  }
+
+  _drawStem(ctx, stage, progress) {
+    const stemHeight = this._stemHeight(stage, progress);
+    const sway = stage >= 6 ? Math.sin(this.phase) * 3 : 0;
+    const thickness = Math.min(4 + Math.floor(stage / 2), 6);
+    const topX = this.baseX + sway;
+    const topY = this.baseY - stemHeight;
+    const midX = this.baseX + sway * 0.5;
+    const midY = this.baseY - stemHeight * 0.5;
+
+    ctx.strokeStyle = '#4a9c5c';
+    ctx.lineWidth = thickness;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(this.baseX, this.baseY);
+    ctx.quadraticCurveTo(midX, midY, topX, topY);
+    ctx.stroke();
+  }
+
+  _drawLeaves(ctx, stage, progress) {
+    const numLeaves = Math.min((stage - 1) * 2, 8);
+    const stemHeight = this._stemHeight(stage, progress);
+
+    for (let i = 0; i < numLeaves; i++) {
+      const leafY = this.baseY - (stemHeight * (i + 1) / (numLeaves + 2));
+      const side = (i % 2 === 0) ? 1 : -1;
+      const wobble = Math.sin(this.phase + i) * 2;
+      const leafX = this.baseX + side * 24 + wobble;
+      const length = 14 + stage * 2;
+      const width = 9 + stage;
+      const angle = side * 40;
+
+      ctx.save();
+      ctx.translate(leafX, leafY);
+      ctx.rotate(angle * Math.PI / 180);
+      ctx.fillStyle = '#5cc06e';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, length, width, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = '#8fe0a0';
+      ctx.beginPath();
+      ctx.ellipse(-side * 4, -3, length / 2, width / 2, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  _drawBud(ctx, stage, progress) {
+    if (stage !== 5) return;
+    const stemHeight = this._stemHeight(stage, progress);
+    const x = this.baseX;
+    const y = this.baseY - stemHeight;
+    const size = 9 + progress * 7;
+
+    ctx.fillStyle = '#e07a94';
+    ctx.beginPath();
+    ctx.arc(x, y, size, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillStyle = '#ffd9e1';
+    ctx.beginPath();
+    ctx.arc(x - size / 3, y - size / 3, Math.max(2, size / 3), 0, 2 * Math.PI);
+    ctx.fill();
+  }
+
+  _drawBloom(ctx, stage, progress) {
+    const stemHeight = this._stemHeight(stage, progress);
+    const cx = this.baseX;
+    const cy = this.baseY - stemHeight;
+
+    let size;
+    if (stage === 6) size = 34 + progress * 30;
+    else size = 64 + Math.sin(this.phase) * 2;
+
+    this._petalRing(ctx, cx, cy, size, 7, 0.55, 0.42, 0.34, 0, '#e0526f');
+    this._petalRing(ctx, cx, cy, size, 6, 0.36, 0.36, 0.29, 25, '#ff8aa2');
+    this._petalRing(ctx, cx, cy, size, 5, 0.18, 0.28, 0.24, 10, '#ffd0d9');
+
+    const centerR = size * 0.22;
+    ctx.fillStyle = '#ffcf7a';
+    ctx.beginPath();
+    ctx.arc(cx, cy, centerR, 0, 2 * Math.PI);
+    ctx.fill();
+
+    if (stage >= 6) this._drawFace(ctx, cx, cy, centerR);
+    if (stage === 7) this._drawSparkles(ctx, cx, cy, size);
+  }
+
+  _petalRing(ctx, cx, cy, size, count, radiusF, rxF, ryF, angleOffset, color) {
+    for (let i = 0; i < count; i++) {
+      const angle = (360 / count) * i + angleOffset;
+      const rad = angle * Math.PI / 180;
+      const px = cx + Math.cos(rad) * size * radiusF;
+      const py = cy + Math.sin(rad) * size * radiusF;
+      const rx = size * rxF, ry = size * ryF;
+
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(rad);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, rx, ry, 0, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.85)';
+      ctx.beginPath();
+      ctx.arc(-rx * 0.25, -ry * 0.25, Math.max(2, rx * 0.18), 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  _drawFace(ctx, cx, cy, centerR) {
+    const eyeR = Math.max(2, centerR / 6);
+    const eyeDx = centerR / 2;
+    const eyeY = cy - centerR / 6;
+
+    ctx.fillStyle = '#5c2a3a';
+    ctx.beginPath(); ctx.arc(cx - eyeDx, eyeY, eyeR, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + eyeDx, eyeY, eyeR, 0, 2 * Math.PI); ctx.fill();
+
+    ctx.strokeStyle = '#5c2a3a';
+    ctx.lineWidth = Math.max(1, eyeR / 2);
+    ctx.beginPath();
+    ctx.arc(cx, cy + centerR / 8, centerR / 3, 0.35, 2.8);
+    ctx.stroke();
+
+    const blushR = Math.max(2, centerR / 5);
+    ctx.fillStyle = 'rgba(255,159,178,0.8)';
+    ctx.beginPath(); ctx.arc(cx - eyeDx - blushR, cy + centerR / 6, blushR, 0, 2 * Math.PI); ctx.fill();
+    ctx.beginPath(); ctx.arc(cx + eyeDx + blushR, cy + centerR / 6, blushR, 0, 2 * Math.PI); ctx.fill();
+  }
+
+  _drawSparkles(ctx, cx, cy, size) {
+    for (let i = 0; i < 4; i++) {
+      const angle = this.phase * 1.5 + i * (Math.PI / 2);
+      const dist = size * 0.9;
+      const sx = cx + Math.cos(angle) * dist;
+      const sy = cy + Math.sin(angle) * dist * 0.6 - size * 0.3;
+      const twinkle = (Math.sin(this.phase * 3 + i) + 1) / 2;
+      if (twinkle < 0.35) continue;
+      const r = 3 + twinkle * 3;
+      ctx.strokeStyle = '#fff6ea';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(sx - r, sy); ctx.lineTo(sx + r, sy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(sx, sy - r); ctx.lineTo(sx, sy + r); ctx.stroke();
+    }
+  }
+
+  get growthPercentage() { return (this.growthLevel / 7.0) * 100; }
+}
+
+/* =========================================================================
+   Gesture interpretation
+   ========================================================================= */
+function calculateGesture(landmarks) {
+  if (!landmarks) return { type: 'No hand detected', command: 'idle' };
+
+  const wrist = landmarks[0];
+  const thumbTip = landmarks[4];
+  const indexTip = landmarks[8];
+  const middleTip = landmarks[12];
+  const ringTip = landmarks[16];
+  const pinkyTip = landmarks[20];
+
+  const distance = Math.sqrt((thumbTip.x - indexTip.x) ** 2 + (thumbTip.y - indexTip.y) ** 2);
+  const avgFingerY = (indexTip.y + middleTip.y + ringTip.y + pinkyTip.y) / 4;
+  const fingerSpread = Math.abs(wrist.y - avgFingerY);
+
+  const isOpen = distance > 0.08 || fingerSpread > 0.2;
+  const isClosed = distance < 0.08 && fingerSpread < 0.18;
+
+  if (isOpen) return { type: 'Open hand — growing', command: 'grow' };
+  if (isClosed) return { type: 'Closed fist — resting', command: 'shrink' };
+  return { type: 'Idle', command: 'idle' };
+}
+
+/* =========================================================================
+   App wiring
+   ========================================================================= */
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const WIDTH = canvas.width;
+const HEIGHT = canvas.height;
+
+const NUM_ROSES = 7;
+const spacing = Math.floor(WIDTH / (NUM_ROSES + 1));
+const rosePlants = [];
+for (let i = 0; i < NUM_ROSES; i++) {
+  const x = spacing * (i + 1);
+  const y = HEIGHT - 50 + ((i % 3) - 1) * 10;
+  rosePlants.push(new RosePlant(x, y));
+}
+
+let currentCommand = 'idle';
+let currentGestureType = 'No hand detected';
+let currentLandmarks = null;
+let hasCelebrated = false;
+
+/* ---- easter egg state ---- */
+const discoveredRoses = new Set();
+let secretUnlocked = false;
+let fireflies = [];
+let lastFireflySpawn = 0;
+const originalTitle = document.title;
+
+const toastEl = document.getElementById('toast');
+let toastTimer = null;
+function showToast(text, duration = 2600) {
+  toastEl.textContent = text;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), duration);
+}
+
+function spawnMiniHeart(x, y) {
+  const heart = document.createElement('div');
+  heart.className = 'mini-heart';
+  heart.style.left = x + 'px';
+  heart.style.top = y + 'px';
+  const size = 16 + Math.random() * 8;
+  heart.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="#e0526f"/></svg>`;
+  document.body.appendChild(heart);
+  setTimeout(() => heart.remove(), 1200);
+}
+
+const videoElement = document.createElement('video');
+videoElement.style.display = 'none';
+document.body.appendChild(videoElement);
+
+const gestureLabel = document.getElementById('gestureLabel');
+const statusLabel = document.getElementById('statusLabel');
+const statusDot = document.getElementById('statusDot');
+const fpsLabel = document.getElementById('fpsLabel');
+const startOverlay = document.getElementById('startOverlay');
+const overlayText = document.getElementById('overlayText');
+const startBtn = document.getElementById('startBtn');
+const ringFill = document.getElementById('ringFill');
+const ringPct = document.getElementById('ringPct');
+const bloomNote = document.getElementById('bloomNote');
+const stageEl = document.getElementById('stage');
+const RING_CIRC = 2 * Math.PI * 26;
+
+function drawBackground() {
+  const grassHeight = 100;
+  const grad = ctx.createLinearGradient(0, HEIGHT - grassHeight, 0, HEIGHT);
+  grad.addColorStop(0, '#3f7a4c');
+  grad.addColorStop(1, '#2b5a37');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, HEIGHT - grassHeight, WIDTH, grassHeight);
+
+  ctx.strokeStyle = 'rgba(20,40,25,0.5)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < WIDTH; i += 30) {
+    ctx.beginPath();
+    ctx.moveTo(i, HEIGHT - grassHeight);
+    ctx.lineTo(i + 15, HEIGHT);
+    ctx.stroke();
+  }
+}
+
+function drawLandmarks(landmarks) {
+  if (!landmarks) return;
+  const HAND_CONNECTIONS = [
+    [0,1],[1,2],[2,3],[3,4],
+    [0,5],[5,6],[6,7],[7,8],
+    [5,9],[9,10],[10,11],[11,12],
+    [9,13],[13,14],[14,15],[15,16],
+    [13,17],[17,18],[18,19],[19,20],
+    [0,17]
+  ];
+  const toCanvas = (lm) => ({ x: WIDTH - lm.x * WIDTH, y: lm.y * HEIGHT });
+
+  ctx.strokeStyle = 'rgba(255,208,217,0.75)';
+  ctx.lineWidth = 2;
+  for (const [a, b] of HAND_CONNECTIONS) {
+    const pa = toCanvas(landmarks[a]);
+    const pb = toCanvas(landmarks[b]);
+    ctx.beginPath();
+    ctx.moveTo(pa.x, pa.y);
+    ctx.lineTo(pb.x, pb.y);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#d9a441';
+  for (const lm of landmarks) {
+    const p = toCanvas(lm);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}
+
+function spawnHeartBurst() {
+  const rect = stageEl.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  for (let i = 0; i < 14; i++) {
+    const heart = document.createElement('div');
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 120 + Math.random() * 180;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist - 80;
+    const size = 12 + Math.random() * 14;
+    heart.className = 'burst-heart';
+    heart.style.left = cx + 'px';
+    heart.style.top = cy + 'px';
+    heart.style.setProperty('--end-transform', `translate(${dx}px, ${dy}px) scale(1) rotate(${(Math.random() - 0.5) * 80}deg)`);
+    heart.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 32 28"><path d="M16 26C16 26 2 17 2 8.5C2 3.8 5.6 1 9.2 1C12.2 1 14.6 2.8 16 5.4C17.4 2.8 19.8 1 22.8 1C26.4 1 30 3.8 30 8.5C30 17 16 26 16 26Z" fill="${['#e0526f','#ff9fb2','#d9a441'][i % 3]}"/></svg>`;
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 1700);
+  }
+}
+
+function updateAndDrawFireflies(now) {
+  if (now - lastFireflySpawn > 9000 + Math.random() * 6000 && fireflies.length < 2) {
+    lastFireflySpawn = now;
+    fireflies.push({
+      x: -30,
+      y: HEIGHT - 140 - Math.random() * 120,
+      speed: 0.6 + Math.random() * 0.4,
+      amp: 14 + Math.random() * 10,
+      phase: Math.random() * Math.PI * 2,
+      born: now
+    });
+  }
+  fireflies = fireflies.filter(f => f.x < WIDTH + 30);
+  for (const f of fireflies) {
+    f.x += f.speed;
+    const y = f.y + Math.sin((now - f.born) / 400 + f.phase) * f.amp;
+    const twinkle = (Math.sin((now - f.born) / 260) + 1) / 2;
+    const glow = ctx.createRadialGradient(f.x, y, 0, f.x, y, 10);
+    glow.addColorStop(0, `rgba(255,244,180,${0.55 + twinkle * 0.35})`);
+    glow.addColorStop(1, 'rgba(255,244,180,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(f.x, y, 10, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.fillStyle = `rgba(255,250,210,${0.7 + twinkle * 0.3})`;
+    ctx.beginPath();
+    ctx.arc(f.x, y, 1.6, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}
+
+let prevTime = performance.now();
+
+function renderFrame() {
+  ctx.save();
+  ctx.scale(-1, 1);
+  if (videoElement.readyState >= 2) {
+    ctx.drawImage(videoElement, -WIDTH, 0, WIDTH, HEIGHT);
+    ctx.fillStyle = 'rgba(26,13,18,0.25)';
+    ctx.fillRect(-WIDTH, 0, WIDTH, HEIGHT);
+  } else {
+    ctx.fillStyle = '#1a0d12';
+    ctx.fillRect(-WIDTH, 0, WIDTH, HEIGHT);
+  }
+  ctx.restore();
+
+  drawBackground();
+
+  if (currentCommand === 'grow') {
+    for (const rose of rosePlants) rose.growthLevel = Math.min(7.0, rose.growthLevel + 0.1);
+    statusLabel.textContent = 'Growing';
+    statusDot.className = 'status-dot grow';
+  } else if (currentCommand === 'shrink') {
+    for (const rose of rosePlants) rose.growthLevel = Math.max(0.0, rose.growthLevel - 0.15);
+    statusLabel.textContent = 'Resting';
+    statusDot.className = 'status-dot shrink';
+  } else {
+    statusLabel.textContent = 'Idle';
+    statusDot.className = 'status-dot';
+  }
+
+  for (const rose of rosePlants) rose.draw(ctx);
+  updateAndDrawFireflies(performance.now());
+  drawLandmarks(currentLandmarks);
+
+  gestureLabel.textContent = currentGestureType;
+  const avgGrowth = rosePlants.reduce((s, r) => s + r.growthPercentage, 0) / rosePlants.length;
+  const offset = RING_CIRC - (avgGrowth / 100) * RING_CIRC;
+  ringFill.style.strokeDashoffset = offset.toFixed(2);
+  ringPct.textContent = Math.round(avgGrowth) + '%';
+
+  if (avgGrowth >= 99) {
+    bloomNote.classList.add('show');
+    if (!hasCelebrated) { hasCelebrated = true; spawnHeartBurst(); }
+  } else {
+    bloomNote.classList.remove('show');
+    if (avgGrowth < 60) hasCelebrated = false;
+  }
+
+  const now = performance.now();
+  const dt = now - prevTime;
+  prevTime = now;
+  if (dt > 0) fpsLabel.textContent = Math.round(1000 / dt) + ' fps';
+
+  requestAnimationFrame(renderFrame);
+}
+
+/* =========================================================================
+   MediaPipe Hands setup
+   ========================================================================= */
+async function startApp() {
+  startOverlay.classList.add('hidden');
+
+  const hands = new Hands({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+  });
+  hands.setOptions({
+    maxNumHands: 1,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.7,
+    minTrackingConfidence: 0.7
+  });
+  hands.onResults((results) => {
+    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+      currentLandmarks = results.multiHandLandmarks[0];
+      const gesture = calculateGesture(currentLandmarks);
+      currentGestureType = gesture.type;
+      currentCommand = gesture.command;
+    } else {
+      currentLandmarks = null;
+      currentGestureType = 'No hand detected';
+      currentCommand = 'idle';
+    }
+  });
+
+  const camera = new Camera(videoElement, {
+    onFrame: async () => { await hands.send({ image: videoElement }); },
+    width: WIDTH,
+    height: HEIGHT
+  });
+
+  try {
+    await camera.start();
+    requestAnimationFrame(renderFrame);
+  } catch (err) {
+    startOverlay.classList.remove('hidden');
+    overlayText.textContent = 'Camera access was blocked or unavailable: ' + err.message + '. Please allow camera access and try again.';
+  }
+}
+
+startBtn.addEventListener('click', startApp);
+
+/* =========================================================================
+   Easter eggs
+   ========================================================================= */
+
+// 1) click a rose to "find" it — collect all 7 for a hidden note
+canvas.addEventListener('click', (evt) => {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = WIDTH / rect.width;
+  const scaleY = HEIGHT / rect.height;
+  const cx = (evt.clientX - rect.left) * scaleX;
+  const cy = (evt.clientY - rect.top) * scaleY;
+
+  for (let i = 0; i < rosePlants.length; i++) {
+    const rose = rosePlants[i];
+    if (Math.abs(cx - rose.baseX) < 55 && cy > rose.baseY - 320 && cy < rose.baseY + 20) {
+      spawnMiniHeart(evt.clientX, evt.clientY);
+      if (!discoveredRoses.has(i)) {
+        discoveredRoses.add(i);
+        if (discoveredRoses.size < rosePlants.length) {
+          showToast(`You found a hidden heart 🌹 (${discoveredRoses.size}/${rosePlants.length})`);
+        } else if (!secretUnlocked) {
+          secretUnlocked = true;
+          showToast('You found them all... 💗');
+          setTimeout(() => document.getElementById('secretNote').classList.add('show'), 600);
+        }
+      }
+      break;
+    }
+  }
+});
+
+// 2) type a secret word anywhere on the page
+(function () {
+  let buffer = '';
+  window.addEventListener('keydown', (evt) => {
+    if (evt.key.length !== 1) return;
+    buffer = (buffer + evt.key.toLowerCase()).slice(-12);
+    if (buffer.includes('love')) {
+      buffer = '';
+      showToast('Someone out there loves you very much 💗', 3200);
+      for (let i = 0; i < 3; i++) {
+        setTimeout(() => spawnHeartBurst(), i * 250);
+      }
+    }
+  });
+})();
+
+// 3) miss you when the tab isn't looking
+document.addEventListener('visibilitychange', () => {
+  document.title = document.hidden ? 'come back? 🌷' : originalTitle;
+});
+
+// 4) double-click the "for you" line for a hidden extra word
+document.getElementById('eyebrowWrap').addEventListener('dblclick', () => {
+  document.getElementById('eyebrowSecret').classList.toggle('show');
+});
+
+// 5) a small note for anyone curious enough to open the console
+console.log('%c🌹 psst — try typing "love" anywhere on the page.', 'color:#e0526f; font-size:13px;');
+</script>
+</body>
+</html>
